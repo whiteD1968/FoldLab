@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fold Lab: downloads</title>
+<style>
+:root { --bg: #e9ecec; --panel: #fbfcfc; --ink: #1b2326; --muted: #5d6a6e; --rule: #c5cdcf; --accent: #0e6b6b;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root { --bg: #14191b; --panel: #1c2427; --ink: #e3e9ea; --muted: #94a3a6; --rule: #34413f; --accent: #43b3ae; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+main { max-width: 820px; margin: 0 auto; padding: 40px 24px 64px; }
+h1 { font: 600 28px/1.2 Georgia, "Times New Roman", serif; margin: 0 0 6px; }
+h2 { font: 600 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 32px 0 10px; }
+p { margin: 0 0 12px; }
+.lead { color: var(--muted); }
+a { color: var(--accent); }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; }
+.card b { display: block; font-weight: 600; }
+.card span { color: var(--muted); font-size: 14px; }
+.files { list-style: none; padding: 0; margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; }
+.files li { display: grid; grid-template-columns: 220px 1fr; gap: 12px; padding: 10px 18px; border-top: 1px solid var(--rule); }
+.files li:first-child { border-top: 0; }
+.files code { font: 500 13px var(--mono); }
+.files span { color: var(--muted); font-size: 14px; }
+@media (max-width: 600px) { .files li { grid-template-columns: 1fr; gap: 2px; } }
+ol { padding-left: 20px; }
+.back { display: inline-block; margin-bottom: 18px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">&larr; Back to the Fold Lab</a>
+  <h1>Folded plates: downloads</h1>
+  <p class="lead">The Fold Lab runs in the browser. The Grasshopper toolkit runs in Rhino 8 for Windows. Both work in feet.</p>
+
+  <h2>Student guides</h2>
+  <div class="card"><b><a href="downloads/guides/Fold-Lab-student-guide.pdf">Musmeci Fold Lab: student guide</a> (PDF) &middot; <a href="downloads/guides/Fold-Lab-student-guide.docx">Word</a></b>
+    <span>Designing in plan and in 3D, tileable grids, the three analysis methods, columns, saving, sharing, and taking a design to Rhino.</span></div>
+  <div class="card"><b><a href="downloads/guides/Grasshopper-student-guide.pdf">Grasshopper toolkit: student guide</a> (PDF) &middot; <a href="downloads/guides/Grasshopper-student-guide.docx">Word</a></b>
+    <span>How to use the Fold on Path + Fabrication file: the control window, checking the structure, the laser model kit and formwork.</span></div>
+
+  <h2>Grasshopper file</h2>
+  <div class="card"><b><a href="downloads/grasshopper/Fold-on-Path-Fabrication.gh" download>Fold on Path + Fabrication.gh</a></b>
+    <span>Ready to use: open it in Grasshopper with your Rhino file set to feet. Everything is wired. Start with the Grasshopper guide.</span></div>
+
+  <h2>Components, one by one</h2>
+  <p>For building your own canvas, or updating a component in the file. Each is a C# Script component for Rhino 8.</p>
+  <ul class="files">
+    <li><a href="downloads/grasshopper/FoldUI.cs" download><code>FoldUI.cs</code></a><span>The control window: every setting in one place</span></li>
+    <li><a href="downloads/grasshopper/FoldDesigner.cs" download><code>FoldDesigner.cs</code></a><span>Builds the folded roof along a path</span></li>
+    <li><a href="downloads/grasshopper/StressLines.cs" download><code>StressLines.cs</code></a><span>STRESS: tension and compression in the roof</span></li>
+    <li><a href="downloads/grasshopper/ModelKit.cs" download><code>ModelKit.cs</code></a><span>Laser model kit: flat pieces, scores, tabs, labels</span></li>
+    <li><a href="downloads/grasshopper/ConcreteFormwork.cs" download><code>ConcreteFormwork.cs</code></a><span>Formwork panels, props and falsework drawings</span></li>
+    <li><a href="downloads/grasshopper/TimberPanels.cs" download><code>TimberPanels.cs</code></a><span>Mitred timber panels nested on stock sheets</span></li>
+    <li><a href="downloads/grasshopper/FoldLabReader.cs" download><code>FoldLabReader.cs</code></a><span>FOLDLAB: brings a Fold Lab design into Rhino</span></li>
+  </ul>
+
+  <h2>Adding a component</h2>
+  <ol>
+    <li>In Rhino type <code>Units</code> and set Model units to Feet (answer No to scaling).</li>
+    <li>In Grasshopper place a C# Script component and double-click it.</li>
+    <li>Delete the template text, paste the whole .cs file, and close the editor. The inputs and outputs build themselves.</li>
+    <li>Right-click the component and give it a name (WINDOW, STRESS, FOLDLAB...).</li>
+  </ol>
+
+  <h2>From the Fold Lab to Rhino</h2>
+  <p>In the Fold Lab press <b>Copy design</b>. In Grasshopper, paste it into a Panel wired to the <b>Design</b> input of FOLDLAB. Wire its Plates into STRESS, FORMWORK or TIMBER, and its Supports into STRESS.</p>
+</main>
+</body>
+</html>
