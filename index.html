@@ -41,7 +41,7 @@ html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--body); }
 .app { display: grid; grid-template-columns: 320px 1fr; height: 100%; }
 aside { background: var(--panel); border-right: 1px solid var(--rule); overflow-y: auto; padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 18px; }
-main { display: grid; grid-template-rows: minmax(320px, 1.25fr) auto minmax(260px, 1fr); gap: 12px; padding: 12px; min-width: 0; min-height: 0; overflow: auto; }
+main { display: grid; grid-template-rows: minmax(440px, 2.2fr) auto minmax(260px, 1fr); gap: 12px; padding: 12px; min-width: 0; min-height: 0; overflow: auto; }
 h1 { font: 600 22px/1.15 var(--display); margin: 0; text-wrap: balance; }
 h2 { font: 600 11.5px/1.2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
 .sub { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
@@ -92,6 +92,20 @@ button.act.solid { background: var(--accent); color: var(--panel); }
 #view3d { cursor: grab; }
 #view3d:active { cursor: grabbing; }
 .below { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; min-height: 0; }
+.statbox { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; }
+.statbox > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; padding: 8px 14px; font-size: 12.5px; color: var(--muted); }
+.statbox > summary::-webkit-details-marker { display: none; }
+.statbox > summary::before { content: "\25B8"; color: var(--accent); margin-right: -10px; }
+.statbox[open] > summary::before { content: "\25BE"; }
+.statbox > summary b { font: 500 13.5px var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.statbox > summary b.flag { color: var(--tension); }
+.statbox > summary .more { margin-left: auto; color: var(--accent); }
+.statbox > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px; }
+.statbox .stats { padding: 0 10px 10px; }
+main.big { grid-template-rows: 1fr auto; }
+main.big .below { display: none; }
+#bigbtn { border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 6px; padding: 3px 9px; font: 500 12px var(--body); cursor: pointer; }
+#bigbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel); }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .stat { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; }
 .stat span { display: block; font-size: 11.5px; color: var(--muted); }
@@ -243,7 +257,7 @@ button.act.solid { background: var(--accent); color: var(--panel); }
 
   <main>
     <section class="panel">
-      <header><h2>Roof</h2><p>Drag to turn, right-drag to pan, scroll to zoom, double-click to reset</p></header>
+      <header><h2>Roof</h2><p>Drag to turn, right-drag to pan, scroll to zoom, double-click to reset <button type="button" id="bigbtn" aria-pressed="false" title="Give the roof the whole page; the plan and sections fold away">Larger view</button></p></header>
       <div class="gtools" id="ptools" role="toolbar" aria-label="Edit points on the roof">
         <button type="button" data-pt="turn" aria-pressed="true">Turn the view</button>
         <button type="button" data-pt="lift" aria-pressed="false">Lift points</button>
@@ -264,7 +278,10 @@ button.act.solid { background: var(--accent); color: var(--panel); }
       <p class="state" id="state3d" role="status"></p>
     </section>
 
-    <div class="stats" id="stats"></div>
+    <details class="statbox" id="statbox">
+      <summary id="statsum">Results</summary>
+      <div class="stats" id="stats"></div>
+    </details>
 
     <div class="below">
       <section class="panel">
@@ -2033,7 +2050,7 @@ if (typeof module !== "undefined") module.exports = Shell;
     const fwd = sub(target, eye).map(v => v / R);
     let right = cross(fwd, [0, 0, 1]); const rl = len(right) || 1; right = right.map(v => v / rl);
     const up = cross(right, fwd);
-    const f = Math.min(w * 0.75, h * 1.3);
+    const f = Math.min(w * 0.62, h * 1.05);
     const proj = Pt => { const d = sub(Pt, eye); const zc = dot(d, fwd); return [w / 2 + f * dot(d, right) / zc, h / 2 - f * dot(d, up) / zc, zc]; };
     view3 = { eye, fwd, right, up, f, w, h, proj, R };
     // ground: the outline of the roof on the floor
@@ -2709,6 +2726,23 @@ if (typeof module !== "undefined") module.exports = Shell;
       html += `<div class="stat st t"><span>Structure</span><b class="flag" style="font:500 13px var(--body)">${S.msg}</b></div>`;
     }
     document.getElementById("stats").innerHTML = html;
+    // the one-line summary: the numbers to watch, flagged ones in red
+    const sum = [];
+    if (S && S.ok) {
+      const k = S.kToPsi, fc = S.fc, allow = 0.45 * fc, crack = 7.5 * Math.sqrt(fc);
+      const tP = (S.scaleT || S.sMaxT) * k, cP = -S.surfC * k, spanFt = G.kind === "tri" ? P.trCol : P.b, ratio = S.uMax > 0 ? spanFt / S.uMax : Infinity;
+      const eq = Math.abs(S.reactZ - S.totalLoad) <= 0.01 * S.totalLoad;
+      const it = (label, val, flag) => sum.push(`<span>${label} <b${flag ? ' class="flag"' : ""}>${val}</b></span>`);
+      it("Tension", `${tP.toFixed(0)} psi`, tP > crack);
+      it("Steel", `${(S.sMaxT / 144 * S.thk * 12 * 12 / 24).toFixed(2)} in\u00b2/ft`, false);
+      it("Compression", `${cP.toFixed(0)}/${allow.toFixed(0)} psi`, cP > allow);
+      it("Deflection", `${(S.uMax * 12).toFixed(2)} in`, ratio < 240);
+      it("Reactions", eq ? "= load \u2713" : "\u2260 load", !eq);
+    } else if (S && !S.ok) sum.push(`<span><b class="flag">${S.msg}</b></span>`);
+    else sum.push("<span>Solving\u2026</span>");
+    const nFlag = (html.match(/class="flag"/g) || []).length;
+    const open = document.getElementById("statbox").open;
+    document.getElementById("statsum").innerHTML = sum.join("") + `<span class="more">${nFlag ? `<b class="flag">${nFlag} flag${nFlag > 1 ? "s" : ""}</b> \u00b7 ` : ""}${open ? "Hide details" : "All results"}</span>`;
   }
 
   // ---------- update loop ----------
@@ -3257,6 +3291,20 @@ if (typeof module !== "undefined") module.exports = Shell;
   })();
   // a link with a design in it opens that design
   (async () => { const h = location.hash; if (h.startsWith("#d=")) { try { applyState(await decodeState(h.slice(3))); msg("Opened the design from the link."); } catch (e) { msg("The link's design could not be read."); } } })();
+
+  // ---------- room for the roof: results fold into one line; the roof can take the whole page ----------
+  (() => {
+    const box = document.getElementById("statbox"), big = document.getElementById("bigbtn"), mainEl = document.querySelector("main");
+    try { box.open = localStorage.getItem("foldlab.statsOpen") === "1"; if (localStorage.getItem("foldlab.big") === "1") { mainEl.classList.add("big"); big.setAttribute("aria-pressed", "true"); } } catch (e) { }
+    box.addEventListener("toggle", () => { try { localStorage.setItem("foldlab.statsOpen", box.open ? "1" : "0"); } catch (e) { } renderStats(); requestAnimationFrame(draw); });
+    big.addEventListener("click", () => {
+      const on = mainEl.classList.toggle("big"); big.setAttribute("aria-pressed", on);
+      big.textContent = on ? "Show plan and sections" : "Larger view";
+      try { localStorage.setItem("foldlab.big", on ? "1" : "0"); } catch (e) { }
+      requestAnimationFrame(draw);
+    });
+    if (mainEl.classList.contains("big")) big.textContent = "Show plan and sections";
+  })();
 
   // ---------- 3D interaction: turn, pan, zoom; lift and move points ----------
   const v3 = document.getElementById("view3d");
